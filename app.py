@@ -14,11 +14,19 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-GITHUB_OWNER = os.environ.get("GITHUB_OWNER", "deekshith-poojary98")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "robot-studio")
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()
-CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "300"))
-CHANNEL_DEFAULT = os.environ.get("CHANNEL_DEFAULT", "stable")
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
+GITHUB_OWNER = _require_env("GITHUB_OWNER")
+GITHUB_REPO = _require_env("GITHUB_REPO")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()  # optional
+CACHE_TTL_SECONDS = int(_require_env("CACHE_TTL_SECONDS"))
+CHANNEL_DEFAULT = _require_env("CHANNEL_DEFAULT")
 
 app = FastAPI(
     title="Robot Studio Updates",

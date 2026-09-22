@@ -2,6 +2,8 @@
 
 Tiny FastAPI middleman that exposes the latest Robot Studio release to the desktop app.
 
+All configuration comes from environment variables — nothing is hardcoded.
+
 ## Endpoints
 
 | Method | Path | Purpose |
@@ -17,66 +19,54 @@ Query params (all optional):
 |-------|--------|--------|
 | `os` | `macos` \| `windows` \| `linux` | Picks a matching release asset |
 | `arch` | `x64` \| `arm64` | Helps disambiguate Linux zips |
-| `channel` | `stable` (default) \| `beta` | `stable` skips GitHub prereleases |
+| `channel` | e.g. `stable` \| `beta` | Defaults to `CHANNEL_DEFAULT` |
 
 Example:
 
 ```bash
-curl 'http://127.0.0.1:8090/v1/latest?os=macos&arch=arm64'
+curl 'https://robot-studio-updates.onrender.com/v1/latest?os=macos'
 ```
 
-```json
-{
-  "version": "1.1.0",
-  "build": 0,
-  "tag": "v1.1.0",
-  "channel": "stable",
-  "released_at": "2026-09-17T12:00:00Z",
-  "notes_url": "https://github.com/deekshith-poojary98/robot-studio/releases/tag/v1.1.0",
-  "download_url": "https://github.com/.../Robot-Studio-1.1.0-macos.zip",
-  "asset_name": "Robot-Studio-1.1.0-macos.zip",
-  "mandatory": false,
-  "source": "github:deekshith-poojary98/robot-studio"
-}
-```
+## Environment (required)
 
-Desktop clients compare `version` / `build` to the running app and open `download_url` / `notes_url` when newer.
-
-Point Robot Studio at the public host with:
-
-```bash
---dart-define=ROBOT_STUDIO_UPDATE_URL=https://updates.example.com
-```
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `GITHUB_OWNER` | yes | Release repo owner |
+| `GITHUB_REPO` | yes | Release repo name |
+| `CACHE_TTL_SECONDS` | yes | In-memory cache for GitHub Releases (e.g. `300`) |
+| `CHANNEL_DEFAULT` | yes | Default channel when query omits it (e.g. `stable`) |
+| `GITHUB_TOKEN` | no | Raises GitHub API rate limits / needed for private repos |
 
 ## Run locally
 
 ```bash
 cd robot-studio-updates
 python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
+
+export GITHUB_OWNER=deekshith-poojary98
+export GITHUB_REPO=robot-studio
+export CACHE_TTL_SECONDS=300
+export CHANNEL_DEFAULT=stable
+# export GITHUB_TOKEN=ghp_...   # optional
+
 uvicorn app:app --host 127.0.0.1 --port 8090 --reload
 ```
 
-## Environment
+## Deploy (Render)
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `GITHUB_OWNER` | `deekshith-poojary98` | Release repo owner |
-| `GITHUB_REPO` | `robot-studio` | Release repo name |
-| `GITHUB_TOKEN` | _(empty)_ | Optional; raises GitHub API rate limits / needed for private repos |
-| `CACHE_TTL_SECONDS` | `300` | In-memory cache for GitHub Releases |
-| `CHANNEL_DEFAULT` | `stable` | Default when `channel` query is omitted |
-
-## Deploy (sketch)
-
-On any small VPS:
+**Start Command:**
 
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 8090
+uvicorn app:app --host 0.0.0.0 --port $PORT
 ```
 
-Put HTTPS in front (Caddy / nginx / Cloudflare). Point Robot Studio at that public base URL.
+Set the same env vars in the Render dashboard. Point Robot Studio at the public URL with:
+
+```bash
+--dart-define=ROBOT_STUDIO_UPDATE_URL=https://robot-studio-updates.onrender.com
+```
 
 ## Out of scope (on purpose)
 
