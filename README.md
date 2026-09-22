@@ -2,7 +2,6 @@
 
 Tiny FastAPI middleman that exposes the latest Robot Studio release to the desktop app.
 
-
 ## Endpoints
 
 | Method | Path | Purpose |
@@ -41,9 +40,9 @@ curl 'http://127.0.0.1:8090/v1/latest?os=macos&arch=arm64'
 }
 ```
 
-Desktop clients compare `version` / `build` to the running app (`pubspec` `1.1.0+6`) and open `download_url` / `notes_url` when newer.
+Desktop clients compare `version` / `build` to the running app and open `download_url` / `notes_url` when newer.
 
-Robot Studio defaults to this service at `http://127.0.0.1:8090` (startup check + **Settings → About → Check for Updates**). Point a packaged build at your public host with:
+Point Robot Studio at the public host with:
 
 ```bash
 --dart-define=ROBOT_STUDIO_UPDATE_URL=https://updates.example.com
@@ -59,37 +58,6 @@ pip install -r requirements.txt
 uvicorn app:app --host 127.0.0.1 --port 8090 --reload
 ```
 
-## Test the Robot Studio UI (mock)
-
-App is currently `1.1.0+6`. Force a **newer** fake release so the update dialog appears:
-
-```bash
-# stop the previous uvicorn first (Ctrl+C), then:
-MOCK_VERSION=9.9.9 MOCK_BUILD=99 \
-  uvicorn app:app --host 127.0.0.1 --port 8090 --reload
-```
-
-Verify the feed:
-
-```bash
-curl -s 'http://127.0.0.1:8090/v1/latest' | python3 -m json.tool
-# "version": "9.9.9", "build": 99, "source": "mock"
-```
-
-Then in Robot Studio:
-
-1. Restart the app (`make run` / `flutter run`) — startup should show **Update available**.
-2. Or open **Settings → About → Check for Updates**.
-
-To test **You're up to date**, mock at or below the running app:
-
-```bash
-MOCK_VERSION=1.1.0 MOCK_BUILD=6 \
-  uvicorn app:app --host 127.0.0.1 --port 8090 --reload
-```
-
-Unset `MOCK_VERSION` to go back to real GitHub Releases.
-
 ## Environment
 
 | Variable | Default | Purpose |
@@ -99,10 +67,6 @@ Unset `MOCK_VERSION` to go back to real GitHub Releases.
 | `GITHUB_TOKEN` | _(empty)_ | Optional; raises GitHub API rate limits / needed for private repos |
 | `CACHE_TTL_SECONDS` | `300` | In-memory cache for GitHub Releases |
 | `CHANNEL_DEFAULT` | `stable` | Default when `channel` query is omitted |
-| `MOCK_VERSION` | _(empty)_ | If set, skip GitHub and return this version (e.g. `9.9.9`) |
-| `MOCK_BUILD` | `0` | Fake build number when mocking |
-| `MOCK_NOTES_URL` | GitHub releases page | Release notes link in the dialog |
-| `MOCK_DOWNLOAD_URL` | GitHub releases page | Download button target |
 
 ## Deploy (sketch)
 
@@ -112,7 +76,7 @@ On any small VPS:
 uvicorn app:app --host 0.0.0.0 --port 8090
 ```
 
-Put HTTPS in front (Caddy / nginx / Cloudflare). Point Robot Studio at that public base URL later.
+Put HTTPS in front (Caddy / nginx / Cloudflare). Point Robot Studio at that public base URL.
 
 ## Out of scope (on purpose)
 

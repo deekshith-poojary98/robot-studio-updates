@@ -20,19 +20,6 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "").strip()
 CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "300"))
 CHANNEL_DEFAULT = os.environ.get("CHANNEL_DEFAULT", "stable")
 
-# Local UI testing — skip GitHub and return a fixed payload.
-# Example: MOCK_VERSION=9.9.9 MOCK_BUILD=99 uvicorn app:app --port 8090 --reload
-MOCK_VERSION = os.environ.get("MOCK_VERSION", "").strip()
-MOCK_BUILD = int(os.environ.get("MOCK_BUILD", "0") or 0)
-MOCK_NOTES_URL = os.environ.get(
-    "MOCK_NOTES_URL",
-    "https://github.com/deekshith-poojary98/robot-studio/releases",
-).strip()
-MOCK_DOWNLOAD_URL = os.environ.get(
-    "MOCK_DOWNLOAD_URL",
-    "https://github.com/deekshith-poojary98/robot-studio/releases",
-).strip()
-
 app = FastAPI(
     title="Robot Studio Updates",
     version="0.1.0",
@@ -201,25 +188,6 @@ async def latest(
     ),
 ) -> dict[str, Any]:
     """Return the newest matching Robot Studio release."""
-    if MOCK_VERSION:
-        tag = MOCK_VERSION if MOCK_VERSION.startswith("v") else f"v{MOCK_VERSION}"
-        version = MOCK_VERSION.lstrip("vV")
-        if "+" in version:
-            version = version.split("+", 1)[0]
-        asset_name = f"Robot-Studio-{version}-mock.zip"
-        return {
-            "version": version,
-            "build": MOCK_BUILD,
-            "tag": tag,
-            "channel": channel or "stable",
-            "released_at": "2026-01-01T00:00:00Z",
-            "notes_url": MOCK_NOTES_URL,
-            "download_url": MOCK_DOWNLOAD_URL,
-            "asset_name": asset_name,
-            "mandatory": False,
-            "source": "mock",
-        }
-
     arch_norm = arch
     if arch_norm == "amd64":
         arch_norm = "x64"
