@@ -173,7 +173,10 @@ def _release_to_payload(
     }
 
 
+@app.get("/")
+@app.head("/")
 @app.get("/health")
+@app.head("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
 

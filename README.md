@@ -8,6 +8,7 @@ All configuration comes from environment variables — nothing is hardcoded.
 
 | Method | Path | Purpose |
 |--------|------|---------|
+| `GET` | `/` | Liveness (same as `/health`; keeps Render’s default probe happy) |
 | `GET` | `/health` | Liveness |
 | `GET` | `/v1/latest` | Latest release metadata |
 
